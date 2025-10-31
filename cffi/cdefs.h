@@ -1339,7 +1339,7 @@ LY_ERR lyplg_ext_compile_extension_instance(struct lysc_ctx *, const struct lysp
 void lyplg_ext_pfree_instance_substatements(const struct ly_ctx *ctx, struct lysp_ext_substmt *substmts);
 void lyplg_ext_cfree_instance_substatements(const struct ly_ctx *ctx, struct lysc_ext_substmt *substmts);
 typedef LY_ERR (*lyplg_ext_parse_clb)(struct lysp_ctx *, struct lysp_ext_instance *);
-typedef LY_ERR (*lyplg_ext_compile_clb)(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *, struct lysc_node *);
+typedef LY_ERR (*lyplg_ext_compile_clb)(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *);
 typedef void (*lyplg_ext_parse_free_clb)(const struct ly_ctx *, struct lysp_ext_instance *);
 typedef void (*lyplg_ext_compile_free_clb)(const struct ly_ctx *, struct lysc_ext_instance *);
 struct lyplg_ext {
@@ -1362,7 +1362,7 @@ struct lyplg_ext_record {
 #define LYPLG_EXT_API_VERSION ...
 LY_ERR lyplg_add_extension_plugin(struct ly_ctx *, uint32_t, const struct lyplg_ext_record *);
 extern "Python" LY_ERR lypy_lyplg_ext_parse_clb(struct lysp_ctx *, struct lysp_ext_instance *);
-extern "Python" LY_ERR lypy_lyplg_ext_compile_clb(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *, struct lysc_node *);
+extern "Python" LY_ERR lypy_lyplg_ext_compile_clb(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *);
 extern "Python" void lypy_lyplg_ext_parse_free_clb(const struct ly_ctx *, struct lysp_ext_instance *);
 extern "Python" void lypy_lyplg_ext_compile_free_clb(const struct ly_ctx *, struct lysc_ext_instance *);
 

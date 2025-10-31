@@ -45,7 +45,7 @@ def libyang_c_lyplg_ext_parse_clb(pctx, pext):
 
 
 @ffi.def_extern(name="lypy_lyplg_ext_compile_clb")
-def libyang_c_lyplg_ext_compile_clb(cctx, pext, cext, parent):
+def libyang_c_lyplg_ext_compile_clb(cctx, pext, cext):
     plugin = extensions_plugins[pext.plugin_ref]
     context = Context(cdata=lib.lyplg_ext_compile_get_ctx(cctx))
     module = Module(context, cext.module)
