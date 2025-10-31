@@ -36,7 +36,7 @@ typedef enum {
     LY_EPLUGIN = 128
 } LY_ERR;
 
-LY_ERR ly_ctx_new(const char *, uint16_t, struct ly_ctx **);
+LY_ERR ly_ctx_new(const char *, uint32_t, struct ly_ctx **);
 void ly_ctx_destroy(struct ly_ctx *);
 int ly_ctx_set_searchdir(struct ly_ctx *, const char *);
 
@@ -1158,8 +1158,7 @@ typedef enum {
    LYD_ANYDATA_DATATREE,
    LYD_ANYDATA_STRING,
    LYD_ANYDATA_XML,
-   LYD_ANYDATA_JSON,
-   LYD_ANYDATA_LYB
+   LYD_ANYDATA_JSON
 } LYD_ANYDATA_VALUETYPE;
 
 union lyd_any_value {
@@ -1167,7 +1166,6 @@ union lyd_any_value {
     const char *str;
     const char *xml;
     const char *json;
-    char *mem;
 };
 
 struct lyd_node_any {
