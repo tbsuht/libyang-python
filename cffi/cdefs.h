@@ -350,7 +350,7 @@ LY_ERR ly_out_new_file(FILE *, struct ly_out **);
 LY_ERR ly_out_new_fd(int, struct ly_out **);
 
 LY_ERR lyd_parse_data(const struct ly_ctx *, struct lyd_node *, struct ly_in *, LYD_FORMAT, uint32_t, uint32_t, struct lyd_node **);
-LY_ERR lyd_parse_op(const struct ly_ctx *, struct lyd_node *, struct ly_in *, LYD_FORMAT, enum lyd_type, struct lyd_node **, struct lyd_node **);
+LY_ERR lyd_parse_op(const struct ly_ctx *, struct lyd_node *, struct ly_in *, LYD_FORMAT, enum lyd_type, uint32_t, struct lyd_node **, struct lyd_node **);
 
 typedef enum {
    LYS_OUT_UNKNOWN,
@@ -392,7 +392,6 @@ struct lys_module {
     struct lys_module **deviated_by;
     ly_bool implemented;
     ly_bool to_compile;
-    uint8_t latest_revision;
     ...;
 };
 
@@ -466,12 +465,11 @@ struct lysp_ext_instance {
     const char *argument;
     LY_VALUE_FORMAT format;
     void *prefix_data;
-    struct lysp_ext *def;
+    uintptr_t plugin_ref;
     void *parent;
     enum ly_stmt parent_stmt;
     uint64_t parent_stmt_index;
     uint16_t flags;
-    const struct lyplg_ext_record *record;
     struct lysp_ext_substmt *substmts;
     void *parsed;
     struct lysp_stmt *child;
@@ -782,7 +780,7 @@ struct lysp_node_augment {
 struct lysc_type {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
 };
@@ -858,7 +856,7 @@ struct lysc_ext {
     const char *name;
     const char *argname;
     struct lysc_ext_instance *exts;
-    struct lyplg_ext *plugin;
+    uintptr_t plugin_ref;
     struct lys_module *module;
     uint16_t flags;
 };
@@ -981,7 +979,6 @@ typedef struct pcre2_real_code pcre2_code;
 
 struct lysc_pattern {
     const char *expr;
-    pcre2_code *code;
     const char *dsc;
     const char *ref;
     const char *emsg;
@@ -1016,7 +1013,7 @@ struct lysc_ident {
 struct lysc_type_num {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_range *range;
@@ -1025,7 +1022,7 @@ struct lysc_type_num {
 struct lysc_type_dec {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     uint8_t fraction_digits;
@@ -1035,7 +1032,7 @@ struct lysc_type_dec {
 struct lysc_type_str {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_range *length;
@@ -1057,7 +1054,7 @@ struct lysc_type_bitenum_item {
 struct lysc_type_enum {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_type_bitenum_item *enums;
@@ -1066,7 +1063,7 @@ struct lysc_type_enum {
 struct lysc_type_bits {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_type_bitenum_item *bits;
@@ -1075,7 +1072,7 @@ struct lysc_type_bits {
 struct lysc_type_leafref {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lyxp_expr *path;
@@ -1087,7 +1084,7 @@ struct lysc_type_leafref {
 struct lysc_type_identityref {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_ident **bases;
@@ -1096,7 +1093,7 @@ struct lysc_type_identityref {
 struct lysc_type_instanceid {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     uint8_t require_instance;
@@ -1105,7 +1102,7 @@ struct lysc_type_instanceid {
 struct lysc_type_union {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_type **types;
@@ -1114,7 +1111,7 @@ struct lysc_type_union {
 struct lysc_type_bin {
     const char *name;
     struct lysc_ext_instance *exts;
-    struct lyplg_type *plugin;
+    uintptr_t plugin_ref;
     LY_DATA_TYPE basetype;
     uint32_t refcount;
     struct lysc_range *length;
@@ -1331,11 +1328,11 @@ struct ly_ctx *lyplg_ext_compile_get_ctx(const struct lysc_ctx *);
 void lyplg_ext_parse_log(const struct lysp_ctx *, const struct lysp_ext_instance *, LY_LOG_LEVEL, LY_ERR, const char *, ...);
 void lyplg_ext_compile_log(const struct lysc_ctx *, const struct lysc_ext_instance *, LY_LOG_LEVEL, LY_ERR, const char *, ...);
 LY_ERR lyplg_ext_parse_extension_instance(struct lysp_ctx *, struct lysp_ext_instance *);
-LY_ERR lyplg_ext_compile_extension_instance(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *);
+LY_ERR lyplg_ext_compile_extension_instance(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *, struct lysc_node *);
 void lyplg_ext_pfree_instance_substatements(const struct ly_ctx *ctx, struct lysp_ext_substmt *substmts);
 void lyplg_ext_cfree_instance_substatements(const struct ly_ctx *ctx, struct lysc_ext_substmt *substmts);
 typedef LY_ERR (*lyplg_ext_parse_clb)(struct lysp_ctx *, struct lysp_ext_instance *);
-typedef LY_ERR (*lyplg_ext_compile_clb)(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *);
+typedef LY_ERR (*lyplg_ext_compile_clb)(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *, struct lysc_node *);
 typedef void (*lyplg_ext_parse_free_clb)(const struct ly_ctx *, struct lysp_ext_instance *);
 typedef void (*lyplg_ext_compile_free_clb)(const struct ly_ctx *, struct lysc_ext_instance *);
 struct lyplg_ext {
@@ -1358,7 +1355,7 @@ struct lyplg_ext_record {
 #define LYPLG_EXT_API_VERSION ...
 LY_ERR lyplg_add_extension_plugin(struct ly_ctx *, uint32_t, const struct lyplg_ext_record *);
 extern "Python" LY_ERR lypy_lyplg_ext_parse_clb(struct lysp_ctx *, struct lysp_ext_instance *);
-extern "Python" LY_ERR lypy_lyplg_ext_compile_clb(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *);
+extern "Python" LY_ERR lypy_lyplg_ext_compile_clb(struct lysc_ctx *, const struct lysp_ext_instance *, struct lysc_ext_instance *, struct lysc_node *);
 extern "Python" void lypy_lyplg_ext_parse_free_clb(const struct ly_ctx *, struct lysp_ext_instance *);
 extern "Python" void lypy_lyplg_ext_compile_free_clb(const struct ly_ctx *, struct lysc_ext_instance *);
 
