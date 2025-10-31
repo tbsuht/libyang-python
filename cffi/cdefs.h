@@ -607,6 +607,13 @@ struct lysp_node_container {
     ...;
 };
 
+struct lysc_prefix;
+
+struct lysc_value {
+    const char *str;
+    struct lysc_prefix *prefixes;
+};
+
 struct lysc_node_leaf {
     union {
         struct lysc_node node;
@@ -620,7 +627,7 @@ struct lysc_node_leaf {
     struct lysc_when **when;
     struct lysc_type *type;
     const char *units;
-    struct lyd_value *dflt;
+    struct lysc_value dflt;
     ...;
 };
 
@@ -650,7 +657,7 @@ struct lysc_node_leaflist {
     struct lysc_when **when;
     struct lysc_type *type;
     const char *units;
-    struct lyd_value **dflts;
+    struct lysc_value *dflts;
     uint32_t min;
     uint32_t max;
     ...;
